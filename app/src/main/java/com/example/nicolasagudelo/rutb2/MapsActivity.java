@@ -1,10 +1,13 @@
 package com.example.nicolasagudelo.rutb2;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -115,36 +118,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        googleMap.setMyLocationEnabled(true);
         // Nueva petición JSONObject
-        JsonObjectRequest peticion = new JsonObjectRequest(
-                Request.Method.GET,
-                "http://labsoftware03.unitecnologica.edu.co/archivoNicolas",
-                null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            Double lat = Double.valueOf(response.getString("latitud"));
-                            Double lon = Double.valueOf(response.getString("longitud"));
-                            LatLng posicion = new LatLng(lat, lon);
-                            mMap.addMarker(new MarkerOptions().position(posicion));
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(posicion,16));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+            JsonObjectRequest peticion = new JsonObjectRequest(
+                    Request.Method.GET,
+                    "http://labsoftware03.unitecnologica.edu.co/archivoNicolas",
+                    null,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try {
+                                Double lat = Double.valueOf(response.getString("latitud"));
+                                Double lon = Double.valueOf(response.getString("longitud"));
+                                LatLng posicion = new LatLng(lat, lon);
+                                mMap.addMarker(new MarkerOptions().position(posicion).title("Ruta 1"));
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(posicion, 16));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    },
+                    new Response.ErrorListener() {
+
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.d(TAG, "Error Respuesta en JSON: " + error.getMessage());
+
                         }
                     }
-                },
-                new Response.ErrorListener() {
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d(TAG, "Error Respuesta en JSON: " + error.getMessage());
-
-                    }
-                }
-        );
-        requestQueue.add(peticion);
-
+            );
+            requestQueue.add(peticion);
     }
 }
