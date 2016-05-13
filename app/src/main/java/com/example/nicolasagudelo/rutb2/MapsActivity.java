@@ -21,6 +21,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -34,6 +36,7 @@ import org.json.JSONObject;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private GoogleApiClient client;
     private RequestQueue requestQueue;
     public static final String TAG = MapsActivity.class.getSimpleName();
 
@@ -44,6 +47,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         login.setClass(getApplicationContext(), Login.class);
         startActivity(login);*/
         setContentView(R.layout.activity_maps);
+        setUpMapIfNeeded();
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
         String tokenGuardado = getDefaults("TokenGuardado", getApplicationContext());
         System.out.println("EXITO: " + tokenGuardado);
 
@@ -71,6 +76,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
     }
+
+    private void setUpMapIfNeeded() {
+                if (mMap == null) {
+                        mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
+                        if (mMap != null) {
+                                setUpMap();
+                            }
+                    }
+            }
+
+    public void setUpMap() {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                                //    ActivityCompat#requestPermissions
+                                        // here to request the missing permissions, and then overriding
+                                                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                                        //                                          int[] grantResults)
+                                                                // to handle the case where the user grants the permission. See the documentation
+                                                                        // for ActivityCompat#requestPermissions for more details.
+                                                                                return;
+                    }
+                mMap.setMyLocationEnabled(true);
+            }
 
     private boolean exit = false;
 
@@ -118,17 +146,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        googleMap.setMyLocationEnabled(true);
         // Nueva petición JSONObject
             JsonObjectRequest peticion = new JsonObjectRequest(
                     Request.Method.GET,
